@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <!-- Include the CesiumJS JavaScript and CSS files -->
+    <script src="https://cesium.com/downloads/cesiumjs/releases/1.124/Build/Cesium/Cesium.js"></script>
+    <link href="https://cesium.com/downloads/cesiumjs/releases/1.124/Build/Cesium/Widgets/widgets.css" rel="stylesheet">
+    <style>
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            width: 100%;
+        }
+
+        #cesiumContainer {
+            height: 100%;
+            width: 100%;
+        }
+
+        .cesium-viewer-bottom {
+            display: none !important;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="cesiumContainer"></div>
+    <script type="module">
+        Cesium.Ion.defaultAccessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJlYmU4NWNiOC1mNjI1LTQyOTMtYTRhNS1lZjU2NzljMTlkNDkiLCJpZCI6MjYwNjY4LCJpYXQiOjE3MzM1MTc4Nzl9.05GKG5ENq6lZAopPH02Zzsq0dg3jYs2uT6CNg_-qir4';
+
+        const viewer = new Cesium.Viewer('cesiumContainer', {
+            terrain: Cesium.Terrain.fromWorldTerrain(),
+            animation: false,
+            timeline: false,
+            fullscreenButton: false,
+            homeButton: true,
+            sceneModePicker: false,
+            navigationHelpButton: false,
+            geocoder: true,
+            baseLayerPicker: true,
+        });
+
+        let userEntity;
+
+        function getLocation() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(function (position) {
+                    const latitude = position.coords.latitude;
+                    const longitude = position.coords.longitude;
+
+                    if (!userEntity) {
+                        userEntity = viewer.entities.add({
+                            position: Cesium.Cartesian3.fromDegrees(longitude, latitude),
+                            point: { pixelSize: 10, color: Cesium.Color.RED }
+                        });
+                        viewer.camera.flyTo({
+                            destination: Cesium.Cartesian3.fromDegrees(longitude, latitude, 1000)
+                        });
+                    } else {
+                        userEntity.position = Cesium.Cartesian3.fromDegrees(longitude, latitude);
+                    }
+                }, function (error) {
+                    console.error("Eroare la obținerea locației: ", error);
+                });
+            } else {
+                alert("Geolocația nu este suportată de acest browser.");
+            }
+        }
+
+        setInterval(getLocation, 5000);
+
+        const buildingTileset = await Cesium.createOsmBuildingsAsync();
+        viewer.scene.primitives.add(buildingTileset);   
+    </script>
+    </div>
+</body>
+
+</html>
